@@ -11,7 +11,6 @@ Wildcat.gameData = {
     nowFrame: 0,
     set fps(a){fps = a},
     get fps(){return fps},
-    get bootFromNWjs(){return typeof nw !== "undefined"},
     startGame: function(main){
         /**
          * @type function
