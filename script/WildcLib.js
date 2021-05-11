@@ -507,7 +507,6 @@ Wildcat.image = (function(){
                 if(actorSize === void 0){
                     element.onload = ()=>{
                         Wildcat.image.list[id].actorSize = element.width;
-                        console.log(actorSize);
                     }
                 }
             }
@@ -590,7 +589,7 @@ Wildcat.gameObject = (function(){
          * @param {number} dx 
          * @param {number} dy 
          */
-        constructor(dx, dy, show = 1, w, h){
+        constructor(dx, dy, show = 1, w, h, id){
             this.show = show;
             this.position = {dx: dx, dy: dy};
             this.size = {w: w, h: h}
@@ -600,6 +599,8 @@ Wildcat.gameObject = (function(){
             this.components = [];
 
             this.arguments = [];
+
+            this.id = id;
         }
         /**
          * 
@@ -639,23 +640,32 @@ Wildcat.gameObject = (function(){
                 component.Update(this, ...arg);
             }
         }
+
+        remove(){
+            if(Wildcat.gameObject.list[this.id]){
+                list.splice(id, 1)
+            }
+        }
     }
 
     return {
         create: function(dx, dy, show = 1, w, h, id = Wildcat.array.getEmpty(list)){
             
-            list[id] = new GameObject(dx, dy, show = 1, w, h);
+            list[id] = new GameObject(dx, dy, show = 1, w, h, id);
+
             return id;
             
         },
         list: list
     }
 })();
+
 /*------------------------------------------
 
 コンポーネント
 
 ------------------------------------------*/
+
 Wildcat.component = (function(){
     let list = [];
 
@@ -688,56 +698,4 @@ Wildcat.component = (function(){
         list: list
     }
 })();
-/*------------------------------------------
 
-マップ関連
-
-------------------------------------------*/
-Wildcat.map = {};
-
-
-/*
-マップチップ
--------------------------------*/
-Wildcat.map.chip = (function(){
-    return {
-
-    }
-})();
-/*
-チップセット
--------------------------------*/
-
-
-
-/*
-タイルマップ
--------------------------------*/
-Wildcat.map.tileMap = (function(){
-    let WCatArray = Wildcat.array;
-    let list = [];
-
-    let mapData = class{
-        constructor(data){
-            if(typeof data[0] === "object"){
-                this.width = WCatArray.getMostLonger(data)
-                for(let i in data){
-                    data[i].length = this.width;
-                    WCatArray.falsyToZeroAll(data[i]);
-                }
-            }else{
-                throw new TypeError("data type is " + typeof data[0])
-            }
-            //joinAllすると文字列型になるのでもう一回nuber型に変える
-            this.data = WCatArray.joinAll(data).map(x=>+x);
-        }
-    }
-
-    return {
-        create: function(data, id = WCatArray.getEmpty(list)){
-            list[id] = new mapData(data);
-            return id;
-        },
-        list: list
-    }
-})();

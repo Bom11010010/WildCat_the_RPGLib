@@ -24,7 +24,6 @@ mover = Wildcat.component.create(
     },
     (object)=>{
         object.position.dx = object.position.dx + 0.1;
-        console.log(object)
     }
 )
 
@@ -37,6 +36,8 @@ spriteObj.addComponent(sprite);
 spriteObj.setArgument(sprite, [imageID])
 
 spriteObj.addComponent(mover);
+
+Wildcat.gameObject.remove(test);
 
 function main(){
     spriteObj.work();
