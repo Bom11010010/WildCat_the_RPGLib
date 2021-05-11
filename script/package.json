@@ -1,0 +1,13 @@
+{
+  "name": "WildCat_Test",
+  "version": "0.0.7",
+  "main": "main.html",
+  "window": {
+    "resizable": false,
+    "show_in_taskbar": true,
+    "title": "WildCat0.0.1",
+    "position": "center",
+    "width": 641,
+    "height": 481
+  }
+}

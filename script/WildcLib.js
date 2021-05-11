@@ -1,3 +1,4 @@
+
 let Wildcat = {}
 
 /*------------------------------------------
@@ -209,11 +210,6 @@ Wildcat.html = (function(){
         }
     }
 })();
-
-
-
-
-
 
 /*------------------------------------------
 
@@ -477,6 +473,13 @@ Wildcat.sound = (function(){
     }
 })();
 
+
+/*------------------------------------------
+
+画像
+
+------------------------------------------*/
+
 Wildcat.image = (function(){
     /**
      * @type {{element: HTMLImageElement, type: number, actorSize: number}[]}
@@ -488,8 +491,6 @@ Wildcat.image = (function(){
      */
     let targetLayer;
     return {
-
-
         /**
          * 画像データを作成する
          * @param {string} src 
@@ -537,8 +538,8 @@ Wildcat.image = (function(){
          * @param {number} id 
          * @param {number} dx 
          * @param {number} dy 
-         * @param {number} whatX 
-         * @param {number} whatY 
+         * @param {number} whatX 画像タイプがimageならサイズ。atrusならチップ位置
+         * @param {number} whatY 画像タイプがimageならサイズ。atrusならチップ位置
          */
         draw: function(id, dx = 0, dy = 0, whatX, whatY){
             let targetCtx = Wildcat.layer.list[targetLayer];
@@ -557,7 +558,7 @@ Wildcat.image = (function(){
                     }
                 }
             }else if(list[id].type === 1){
-                targetCtx.drawImage(list[id].element,whatX * actorSize, whatY * actorSize, actorSize, actorSize, dx, dy, actorSize, actorSize)
+                targetCtx.drawImage(list[id].element, whatX * actorSize, whatY * actorSize, actorSize, actorSize, dx, dy, actorSize, actorSize)
             }
         },
 
@@ -580,6 +581,7 @@ Wildcat.image = (function(){
 ゲームオブジェクト
 
 ------------------------------------------*/
+
 Wildcat.gameObject = (function(){
     let list = [];
     
@@ -588,37 +590,104 @@ Wildcat.gameObject = (function(){
          * @param {number} dx 
          * @param {number} dy 
          */
-        constructor(dx,dy){
-            this.position = [dx,dy];
+        constructor(dx, dy, show = 1, w, h){
+            this.show = show;
+            this.position = {dx: dx, dy: dy};
+            this.size = {w: w, h: h}
             /**
-             * @type function[]
+             * @type {Array<{Start: (object: any, ...arg)=>null, Update: (object: any, ...arg)=>null, isStarted: boolean}>}
              */
-            this.component = [];
+            this.components = [];
+
+            this.arguments = [];
         }
         /**
          * 
-         * @param {(dx: number,dy: number)=>*} func 
+         * @param {num} compId
          * @param {number} id 
          */
-        addComponent(func, id = Wildcat.array.getEmpty(this.component)){
-            this.component[id] = func;
+        addComponent(compId, arg = [], id = Wildcat.array.getEmpty(this.components)){
+            this.components[id] = Wildcat.component.list[compId];
+            this.arguments[id] = arg;
+            return id
         }
-        put(){
-            this.component[id](this.dx, this.dy);
+        /**
+         * 
+         * @param {number} id 
+         * @param {*[]} arg 
+         */
+        setArgument(id, arg){
+            this.arguments[id] = arg;
+        }
+
+        work(){
+            let components = this.components
+            /**
+             * @type {{Start: (object: any, ...arg)=>null, Update: (object: any, ...arg)=>null, isStarted: boolean}}
+             */
+            let component;
+
+            for(let i in components){
+                let arg = this.arguments[i];
+
+                component = components[i];
+
+                if(!component.isStarted){
+                    component.Start(this, ...arg);
+                    component.isStarted = true;
+                }
+                component.Update(this, ...arg);
+            }
         }
     }
 
     return {
-        create: function(dx, dy, id =  Wildcat.array.getEmpty(list)){
+        create: function(dx, dy, show = 1, w, h, id = Wildcat.array.getEmpty(list)){
             
-            list[id] = new GameObject(dx,dy);
+            list[id] = new GameObject(dx, dy, show = 1, w, h);
             return id;
             
         },
         list: list
     }
 })();
+/*------------------------------------------
 
+コンポーネント
+
+------------------------------------------*/
+Wildcat.component = (function(){
+    let list = [];
+
+    let Component = class {
+        /**
+         * 
+         * @param {(object: any, ...arg)=>null} Start 
+         * @param {(object: any, ...arg)=>null} Update 
+         */
+        constructor(Start, Update){
+            this.Start = Start;
+            this.Update = Update;
+            
+            this.isStarted = false;
+        }
+    }
+
+    return {
+        /**
+         * 
+         * @param {(object: any, ...arg)=>null} Start 
+         * @param {(object: any, ...arg)=>null} Update 
+         * @param {number} id 
+         * @returns {number}
+         */
+        create: function(Start, Update, id = Wildcat.array.getEmpty(list)){
+            list[id] = new Component(Start, Update);
+            return id
+        },
+        list: list
+    }
+})();
 /*------------------------------------------
 
 マップ関連
@@ -635,6 +704,11 @@ Wildcat.map.chip = (function(){
 
     }
 })();
+/*
+チップセット
+-------------------------------*/
+
+
 
 /*
 タイルマップ
