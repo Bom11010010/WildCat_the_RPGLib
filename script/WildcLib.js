@@ -797,9 +797,24 @@ Wildcat.file = (function(){
                 return false
             }
 
-            ///
-            // 書き足しだけで書き換えは出来ないので直す
-            ///
+            //既にそのキーを持つ値があるか
+
+            if(dataStore.match(`${key}=`)){
+                let dataList = dataStore.split(";");
+                let keyAndDataList = dataList.map(x=>{let value = x.split("="); return [value[0], value[1]]});
+
+                let newDataList = keyAndDataList.map(x=>{
+                    let newData = x[1]
+                    if(x[0] == key){
+                        newData = data
+                    }
+                    return `${x[0]}=${newData}`
+                })
+
+                dataStore = newDataList.join(";");
+
+                return true
+            }
 
             if(dataStore !== ""){
                 dataStore += ";"
@@ -821,8 +836,19 @@ Wildcat.file = (function(){
             }
             return result
         },
-        removeData: function(){
+        removeData: function(key){
+            let dataList = dataStore.split(";");
+            let keyAndDataList = dataList.map(x=>{let data = x.split("="); return [data[0], data[1]]});
 
+            for(let i in keyAndDataList){
+                if(keyAndDataList[i][0] == key){
+                    target = i;
+                }
+            }
+            keyAndDataList.splice(target, 1);
+            let newDataList = keyAndDataList.map(x=>{return x.join("=")});
+            
+            dataStore = newDataList.join(";");
         }
     }
 })();
