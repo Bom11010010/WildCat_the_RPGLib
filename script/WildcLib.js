@@ -1,4 +1,3 @@
-
 let Wildcat = {}
 
 /*------------------------------------------
@@ -643,7 +642,7 @@ Wildcat.gameObject = (function(){
 
         remove(){
             if(Wildcat.gameObject.list[this.id]){
-                list.splice(id, 1)
+                list.splice(this.id, 1)
             }
         }
     }
@@ -699,3 +698,131 @@ Wildcat.component = (function(){
     }
 })();
 
+/*------------------------------------------
+
+ファイル
+
+------------------------------------------*/
+
+Wildcat.file = (function(){
+    /**
+     * @type {string}
+     */
+    let dataStore = "";
+
+    /**
+     * @type {string}
+     */
+    let dataStoreName = "noname";
+
+    /**
+     * @type {(name: string)=>boolean}
+     */
+    let selectDataStore = function(name){
+        dataStoreName = name;
+    }
+
+    /**
+     * @type {()=>boolean}
+     */
+    let save = function(){
+        document.cookie = `${dataStoreName}=${encodeURIComponent(dataStore)}`;
+        return true;
+    };
+
+    /**
+     * @type {()=>boolean}
+     */
+    let load = function(){
+        let data
+
+        let cookies = document.cookie.split(';')
+
+        cookies.forEach(function(value){
+            let content = value.split("=")
+            if(content[0] == dataStoreName){
+                data = content[1]
+            }
+        })
+
+        dataStore = decodeURIComponent(data)
+    }
+
+    /**
+     * @type {()=>boolean}
+     */
+    let delData = function(){
+        
+        document.cookie = `${dataStoreName}=none; max-age=0`;
+        return true;
+    }
+
+    if(typeof nw != 'undefined'){
+        selectDataStore = function(name){
+            
+        }
+        save = function(){
+            console.log("nwjs")
+            return true
+        }
+        load = function(){
+            let data
+
+            return data
+        }
+        delData = function(){
+            return true
+        }
+    }
+
+    return{
+        selectDataStore: selectDataStore,
+        save: save,
+        load: load,
+        delData: delData,
+        get dataStore(){return dataStore},
+        /**
+         * 
+         * @param {string} key 
+         * @param {any} data 
+         * @returns {boolean}
+         */
+        setData: function(key, data){
+
+            if(key.match(/[^A-Za-z0-9]+/)){
+                //英数字でないならfalseを返して終了
+                return false
+            }else if(key[0].match(/[^A-Za-z]+/)){
+                //先頭が数字ならfalseを返して終了
+                return false
+            }
+
+            ///
+            // 書き足しだけで書き換えは出来ないので直す
+            ///
+
+            if(dataStore !== ""){
+                dataStore += ";"
+            }
+            dataStore += `${key}=${encodeURIComponent(data)}`;
+
+            return true;
+        },
+        getData: function(key){
+            let dataList = dataStore.split(";");
+            let keyAndDataList = dataList.map(x=>{let data = x.split("="); return [data[0], data[1]]});
+
+            let result
+
+            for(let i in keyAndDataList){
+                if(keyAndDataList[i][0] == key){
+                    result = keyAndDataList[i][1]
+                }
+            }
+            return result
+        },
+        removeData: function(){
+
+        }
+    }
+})();

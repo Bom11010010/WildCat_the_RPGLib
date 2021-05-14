@@ -2,7 +2,9 @@
 let wc_image = Wildcat.image;
 let wc_layer = Wildcat.layer;
 
-let src = "https://lh3.googleusercontent.com/proxy/2ocnAnZUAbr2qMPdPx1Ti86Fxymjs5tZKJSZ8lptKOSmaZM0cqX7PzagWKmdq5V7LOFS3879AMfNWR0Qq2ksyri4YF053TeI0ghvwOyZfS2pfzFqbMHDx1TDZyvflGX9RGKKmpoQ2dJM5K9reKoUmFA5"
+let src = "https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png"
+
+
 
 Wildcat.gameData.chipSize = 16;
 
@@ -37,7 +39,7 @@ spriteObj.setArgument(sprite, [imageID])
 
 spriteObj.addComponent(mover);
 
-Wildcat.gameObject.remove(test);
+spriteObj.remove(test);
 
 function main(){
     spriteObj.work();
