@@ -759,7 +759,7 @@ Wildcat.file = (function(){
     /**
      * @type {()=>boolean}
      */
-    let delData = function(){
+    let deleteData = function(){
         
         document.cookie = `${dataStoreName}=none; max-age=0`;
         return true;
@@ -794,7 +794,7 @@ Wildcat.file = (function(){
             })
 
         }
-        delData = function(){
+        deleteData = function(){
             fs.unlink(appDir + `\\save\\${dataStoreName}.dat`, function(err) {});
             return true
         }
@@ -804,7 +804,7 @@ Wildcat.file = (function(){
         selectDataStore: selectDataStore,
         save: save,
         load: load,
-        delData: delData,
+        deleteData: deleteData,
         get dataStore(){return dataStore},
         /**
          * 
@@ -812,7 +812,7 @@ Wildcat.file = (function(){
          * @param {any} data 
          * @returns {boolean}
          */
-        setData: function(key, data){
+        writeData: function(key, data){
 
             if(key.match(/[^A-Za-z0-9]+/)){
                 //英数字でないならfalseを返して終了
@@ -848,7 +848,7 @@ Wildcat.file = (function(){
 
             return true;
         },
-        getData: function(key){
+        readData: function(key){
             let dataList = dataStore.split(";");
             let keyAndDataList = dataList.map(x=>{let data = x.split("="); return [data[0], data[1]]});
 
