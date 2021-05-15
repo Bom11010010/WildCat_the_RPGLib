@@ -25,7 +25,7 @@ mover = Wildcat.component.create(
     (object)=>{
     },
     (object)=>{
-        object.position.dx = object.position.dx + 0.1;
+        object.position.dx = object.position.dx + 1;
     }
 )
 

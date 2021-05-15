@@ -1,5 +1,4 @@
 let Wildcat = {}
-
 /*------------------------------------------
 
 ゲームデータ
@@ -17,14 +16,20 @@ Wildcat.gameData = {
          */
         let fps = 30;
         let nowFrame = 0;
+
         (function mainloop(){
+
             nowFrame = nowFrame + 1;
+
             for(let i in Wildcat.layer.list){
                 let targetLayer = Wildcat.layer.list[i];
+
                 targetLayer.clearRect(0, 0, targetLayer.canvas.width, targetLayer.canvas.height);
             }
             main();
+
             Wildcat.gameData.nowFrame = nowFrame;
+
             setTimeout(mainloop, 1000 / fps)
         })();
     }
@@ -64,11 +69,13 @@ Wildcat.array = (function(){
          */
         getMostLonger: function(array){
             let result = 0;
+
             for(let i in array){
                 if(array[i].length > result){
                     result = array[i].length
                 }
             }
+
             return result;
         },
         /**
@@ -77,6 +84,7 @@ Wildcat.array = (function(){
          */
         falsyToZeroAll: function(array){
             let result = [];
+            
             for(let i in array){
                 if(!array[i]){
                     result[i] = 0;
@@ -758,19 +766,36 @@ Wildcat.file = (function(){
     }
 
     if(typeof nw != 'undefined'){
-        selectDataStore = function(name){
-            
+        let path = require("path");
+        let fs = require("fs");
+        let execSync = require("child_process").execSync;
+
+        let appDir;
+
+        /**
+         * アプリ（exeもしくはhtmlファイル）の場所。セーブデータ等の後から改変するファイルのディレクトリを取得するのに使う
+         * @type {string}
+         */
+        appDir = process.cwd();
+        if(!appDir.match(/src$/)){
+            appDir = path.dirname(process.execPath);
         }
+        console.log(appDir)
+
         save = function(){
-            console.log("nwjs")
+            fs.writeFile(appDir + `\\save\\${dataStoreName}.dat`, dataStore, function(err){})
+
             return true
         }
         load = function(){
-            let data
 
-            return data
+            fs.readFile(appDir + `\\save\\${dataStoreName}.dat`, 'utf8', function(err, data) {
+                dataStore = data;
+            })
+
         }
         delData = function(){
+            fs.unlink(appDir + `\\save\\${dataStoreName}.dat`, function(err) {});
             return true
         }
     }
@@ -817,7 +842,7 @@ Wildcat.file = (function(){
             }
 
             if(dataStore !== ""){
-                dataStore += ";"
+                dataStore += ";";
             }
             dataStore += `${key}=${encodeURIComponent(data)}`;
 
