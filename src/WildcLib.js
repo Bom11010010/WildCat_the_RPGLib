@@ -601,50 +601,54 @@ Wildcat.gameObject = (function(){
             this.position = {dx: dx, dy: dy};
             this.size = {w: w, h: h}
             /**
-             * @type {Array<{Start: (object: any, ...arg)=>null, Update: (object: any, ...arg)=>null, isStarted: boolean}>}
+             * @type {Array<{Start: (object: any, value: any)=>any, Update: (object: any, value: any)=>any, isStarted: boolean}>}
              */
             this.components = [];
 
-            this.arguments = [];
+            /**
+             * @type {any[][]}
+             */
+            this.value = []
 
             this.id = id;
         }
         /**
          * 
-         * @param {num} compId
+         * @param {number} compId
          * @param {number} id 
+         * @returns {number}
          */
-        addComponent(compId, arg = [], id = Wildcat.array.getEmpty(this.components)){
+        addComponent(compId, value = {}, id = Wildcat.array.getEmpty(this.components)){
             this.components[id] = Wildcat.component.list[compId];
-            this.arguments[id] = arg;
+            this.value[id] = value;
             return id
         }
         /**
          * 
          * @param {number} id 
-         * @param {*[]} arg 
+         * @param {*[]} value 
          */
-        setArgument(id, arg){
-            this.arguments[id] = arg;
+        setValue(id, value){
+            this.value[id] = value;
         }
 
         work(){
             let components = this.components
             /**
-             * @type {{Start: (object: any, ...arg)=>null, Update: (object: any, ...arg)=>null, isStarted: boolean}}
+             * @type {{Start: (object: any, value: any)=>any, Update: (object: any, value: any)=>any, isStarted: boolean}}
              */
             let component;
 
             for(let i in components){
-                let arg = this.arguments[i];
+                let value = this.value[i];
 
                 component = components[i];
 
                 if(!component.isStarted){
-                    component.Start(this, ...arg);
+                    this.value[i] = component.Start(this, value);
                     component.isStarted = true;
                 }
-                component.Update(this, ...arg);
+                this.value[i] = component.Update(this, value);
             }
         }
 
@@ -679,22 +683,24 @@ Wildcat.component = (function(){
     let Component = class {
         /**
          * 
-         * @param {(object: any, ...arg)=>null} Start 
-         * @param {(object: any, ...arg)=>null} Update 
+         * @param {(object: any, value: any)=>any} Start 
+         * @param {(object: any, value: any)=>any} Update 
          */
         constructor(Start, Update){
             this.Start = Start;
             this.Update = Update;
             
             this.isStarted = false;
+
+            this.values;
         }
     }
 
     return {
         /**
          * 
-         * @param {(object: any, ...arg)=>null} Start 
-         * @param {(object: any, ...arg)=>null} Update 
+         * @param {(object: any, value: any)=>any} Start 
+         * @param {(object: any, value: any)=>any} Update 
          * @param {number} id 
          * @returns {number}
          */
@@ -746,14 +752,19 @@ Wildcat.file = (function(){
 
         let cookies = document.cookie.split(';')
 
+        if(cookies[0] === ""){return false}
         cookies.forEach(function(value){
             let content = value.split("=")
+            console.log(content[0] == dataStoreName)
             if(content[0] == dataStoreName){
                 data = content[1]
             }
         })
-
-        dataStore = decodeURIComponent(data)
+        if(typeof data != "undefined"){
+            dataStore = decodeURIComponent(data)
+            return true
+        }
+        return false
     }
 
     /**
@@ -780,19 +791,28 @@ Wildcat.file = (function(){
         if(!appDir.match(/src$/)){
             appDir = path.dirname(process.execPath);
         }
-        console.log(appDir)
+        
+        //セーブディレクトリが無いなら作成する
+        if (!fs.existsSync(appDir + `\\save`)) {
+            fs.mkdirSync(appDir + `\\save`);
+        }
 
+        /**
+         * TODO: fsの関数を同期するバージョンに付け替える
+         */
         save = function(){
-            fs.writeFile(appDir + `\\save\\${dataStoreName}.dat`, dataStore, function(err){})
+            fs.writeFileSync(appDir + `\\save\\${dataStoreName}.dat`, dataStore, function(err){})
 
             return true
         }
         load = function(){
 
-            fs.readFile(appDir + `\\save\\${dataStoreName}.dat`, 'utf8', function(err, data) {
-                dataStore = data;
-            })
-
+            if(fs.existsSync(appDir + `\\save\\${dataStoreName}.dat`)){
+                dataStore = fs.readFileSync(appDir + `\\save\\${dataStoreName}.dat`, 'utf8')
+                console.log(dataStore);
+                return true
+            }
+            return false
         }
         deleteData = function(){
             fs.unlink(appDir + `\\save\\${dataStoreName}.dat`, function(err) {});
@@ -831,7 +851,7 @@ Wildcat.file = (function(){
                 let newDataList = keyAndDataList.map(x=>{
                     let newData = x[1]
                     if(x[0] == key){
-                        newData = data
+                        newData = encodeURIComponent(data);
                     }
                     return `${x[0]}=${newData}`
                 })
@@ -851,8 +871,8 @@ Wildcat.file = (function(){
         readData: function(key){
             let dataList = dataStore.split(";");
             let keyAndDataList = dataList.map(x=>{let data = x.split("="); return [data[0], data[1]]});
-
-            let result
+            
+            let result = ""
 
             for(let i in keyAndDataList){
                 if(keyAndDataList[i][0] == key){

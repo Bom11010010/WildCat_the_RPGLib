@@ -2,8 +2,7 @@
 let wc_image = Wildcat.image;
 let wc_layer = Wildcat.layer;
 
-let src = "https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png"
-
+let src = "https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/Red_Circle%28small%29.svg/44px-Red_Circle%28small%29.svg.png"
 
 
 Wildcat.gameData.chipSize = 16;
@@ -13,19 +12,52 @@ wc_image.targetLayer = Wildcat.layer.create();
 let imageID = wc_image.create(src, 'image');
 
 sprite = Wildcat.component.create(
-    (object, imageId)=>{
+    (object, value)=>{
 
     },
-    (object, imageId)=>{
-        wc_image.draw(imageId, object.position.dx, object.position.dy, object.size.w, object.size.h)
+    (object, value)=>{
+        let v = value
+
+        wc_image.draw(v.imageID, object.position.dx, object.position.dy, object.size.w, object.size.h);
+
+        let image = Wildcat.image.list[v.imageID]
+
+        return v
     }
 );
 
 mover = Wildcat.component.create(
-    (object)=>{
+    (object, value)=>{
+        let v = value;
+
+        object.size = v.size;
+
+        if(Wildcat.file.load()){
+            object.position = {dx: +Wildcat.file.readData("x"), dy: +Wildcat.file.readData("y")}
+    
+            v.speed = {x: +Wildcat.file.readData("speedX"), y: +Wildcat.file.readData("speedY")}
+        }
+        return v
     },
-    (object)=>{
-        object.position.dx = object.position.dx + 1;
+    (object, value)=>{
+        let v = value;
+
+        object.position.dx = object.position.dx + v.speed.x;
+        object.position.dy = object.position.dy + v.speed.y;
+
+        if(object.position.dx + object.size.w >= Wildcat.gameData.screenSize.x || object.position.dx < 0){
+            v.speed.x = -v.speed.x
+        }
+        if(object.position.dy + object.size.h >= Wildcat.gameData.screenSize.y || object.position.dy < 0){
+            v.speed.y = -v.speed.y
+        }
+        Wildcat.file.writeData("x", object.position.dx)
+        Wildcat.file.writeData("y", object.position.dy)
+
+        Wildcat.file.writeData("speedX", v.speed.x)
+        Wildcat.file.writeData("speedY", v.speed.y)
+
+        return v
     }
 )
 
@@ -33,11 +65,9 @@ test = Wildcat.gameObject.create(1, 0, 0)
 
 spriteObj = Wildcat.gameObject.list[test]
 
-spriteObj.addComponent(sprite);
+spriteObj.addComponent(sprite, {imageID: imageID});
+spriteObj.addComponent(mover, {speed:{x:5, y:5}, size:{w:50, h:50}});
 
-spriteObj.setArgument(sprite, [imageID])
-
-spriteObj.addComponent(mover);
 
 spriteObj.remove(test);
 
@@ -47,3 +77,17 @@ function main(){
 
 Wildcat.gameData.startGame(main);
 
+if(typeof nw == 'undefined'){
+    window.addEventListener('focus', function(){
+
+        Wildcat.file.save();
+
+    });
+}else{
+    nw.Window.get().on('close', function () {
+
+        Wildcat.file.save();
+
+        this.close(true);
+    });
+}
