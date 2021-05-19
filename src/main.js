@@ -33,9 +33,9 @@ mover = Wildcat.component.create(
         object.size = v.size;
 
         if(Wildcat.file.load()){
-            object.position = {dx: +Wildcat.file.readData("x"), dy: +Wildcat.file.readData("y")}
+            object.position = Wildcat.file.readData("position")
     
-            v.speed = {x: +Wildcat.file.readData("speedX"), y: +Wildcat.file.readData("speedY")}
+            v.speed = Wildcat.file.readData("speed")
         }
         return v
     },
@@ -51,11 +51,9 @@ mover = Wildcat.component.create(
         if(object.position.dy + object.size.h >= Wildcat.gameData.screenSize.y || object.position.dy < 0){
             v.speed.y = -v.speed.y
         }
-        Wildcat.file.writeData("x", object.position.dx)
-        Wildcat.file.writeData("y", object.position.dy)
+        Wildcat.file.writeData("position", object.position)
 
-        Wildcat.file.writeData("speedX", v.speed.x)
-        Wildcat.file.writeData("speedY", v.speed.y)
+        Wildcat.file.writeData("speed", v.speed)
 
         return v
     }
@@ -78,7 +76,7 @@ function main(){
 Wildcat.gameData.startGame(main);
 
 if(typeof nw == 'undefined'){
-    window.addEventListener('focus', function(){
+    window.addEventListener('focusout', function(){
 
         Wildcat.file.save();
 

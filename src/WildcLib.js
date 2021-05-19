@@ -104,6 +104,79 @@ Wildcat.array = (function(){
 
 /*------------------------------------------
 
+オブジェクト操作
+
+------------------------------------------*/
+
+Wildcat.object = (function(){
+    return {
+        /**
+         * 
+         * @param {any} obj 
+         * @returns 
+         */
+        encodeToString: function encode(obj){
+            let result = ""
+            for(let i in obj){
+                if(result !== ""){
+                    result += ";"
+                }
+                if(typeof obj[i] == 'object'){
+                    result += `${i}=${encodeURIComponent(encode(obj[i]))}|object`
+                }else{
+                    //非対応の型を弾く
+                    if(typeof obj[i] !== 'bigint' && typeof obj[i] !== 'function' && typeof obj[i] !== 'symbol'){
+                        result += `${i}=${encodeURIComponent(obj[i])}|${typeof obj[i]}`
+                    }
+                }
+            }
+            return result
+        },
+        /**
+         * 
+         * @param {string} str 
+         */
+        decodeFromString: function decode(str){
+            let result = {}
+            
+            let keyAndDataList = str.split(";")
+
+            for(let i in keyAndDataList){
+                let key
+                /**
+                 * @type {string}
+                 */
+                let dataAndType
+
+
+                [key, dataAndTypeStr] = keyAndDataList[i].split("=");
+                dataAndType = dataAndTypeStr.split("|");
+
+                data = decodeURIComponent(dataAndType[0])
+                if(dataAndType[1] == 'undefined'){
+                    result[key] = undefined;
+                }else if(dataAndType[1] == 'string'){
+                    result[key] = data
+                }else if(dataAndType[1] == 'number'){
+                    result[key] = +data
+                }else if(dataAndType[1] == 'boolean'){
+                    if(data === 'false'){
+                        result[key] = false;
+                    }else{
+                        result[key] = true;
+                    }
+                }else if(dataAndType[1] == 'object'){
+                    result[key] = decode(data);
+                }
+            }
+
+            return result
+        }
+    }
+})()
+
+/*------------------------------------------
+
 DOM操作
 
 ------------------------------------------*/
@@ -755,7 +828,6 @@ Wildcat.file = (function(){
         if(cookies[0] === ""){return false}
         cookies.forEach(function(value){
             let content = value.split("=")
-            console.log(content[0] == dataStoreName)
             if(content[0] == dataStoreName){
                 data = content[1]
             }
@@ -809,7 +881,6 @@ Wildcat.file = (function(){
 
             if(fs.existsSync(appDir + `\\save\\${dataStoreName}.dat`)){
                 dataStore = fs.readFileSync(appDir + `\\save\\${dataStoreName}.dat`, 'utf8')
-                console.log(dataStore);
                 return true
             }
             return false
@@ -842,18 +913,30 @@ Wildcat.file = (function(){
                 return false
             }
 
+            //非対応の型を弾く
+            if(typeof data === 'bigint' || typeof data === 'function' || typeof data === 'symbol'){
+                return false
+            }
+            
+
             //既にそのキーを持つ値があるか
 
             if(dataStore.match(`${key}=`)){
                 let dataList = dataStore.split(";");
                 let keyAndDataList = dataList.map(x=>{let value = x.split("="); return [value[0], value[1]]});
 
+
+
                 let newDataList = keyAndDataList.map(x=>{
-                    let newData = x[1]
+                    let newData = (x[1].split("|"))[0]; //型の部分のみ取り出す
                     if(x[0] == key){
-                        newData = encodeURIComponent(data);
+                        if(typeof data == 'object'){
+                            newData = encodeURIComponent(Wildcat.object.encodeToString(data))
+                        }else{
+                            newData = encodeURIComponent(data);
+                        }
                     }
-                    return `${x[0]}=${newData}`
+                    return `${x[0]}=${newData}|${typeof data}`
                 })
 
                 dataStore = newDataList.join(";");
@@ -864,7 +947,7 @@ Wildcat.file = (function(){
             if(dataStore !== ""){
                 dataStore += ";";
             }
-            dataStore += `${key}=${encodeURIComponent(data)}`;
+            dataStore += `${key}=${encodeURIComponent(data)}|${typeof data}`;
 
             return true;
         },
@@ -872,11 +955,34 @@ Wildcat.file = (function(){
             let dataList = dataStore.split(";");
             let keyAndDataList = dataList.map(x=>{let data = x.split("="); return [data[0], data[1]]});
             
-            let result = ""
+            let result = undefined;
 
             for(let i in keyAndDataList){
                 if(keyAndDataList[i][0] == key){
-                    result = keyAndDataList[i][1]
+                    let value
+                    /**
+                     * @type {'undefined'|'boolean'|'number'|'string'|'object'}
+                     */
+                    let type
+                    [value, type] = keyAndDataList[i][1].split("|");
+
+                    value = decodeURIComponent(value);
+                    
+                    if(type == 'string'){
+                        result = value
+                    }else if(type == 'number'){
+                        result = +value   //値の前に+を付けることでnumber型に変えられる
+                    }else if(type == 'boolean'){
+                        if(value === "false"){
+                            result = false;
+                        }else{
+                            result = true;
+                        }
+                    }else if(type === 'undefined'){
+                        result = undefined;
+                    }else if(type == 'object'){
+                        result = Wildcat.object.decodeFromString(value)
+                    }
                 }
             }
             return result
@@ -895,5 +1001,39 @@ Wildcat.file = (function(){
             
             dataStore = newDataList.join(";");
         }
+    }
+})();
+
+/*------------------------------------------
+
+Usableオブジェクト
+
+------------------------------------------*/
+
+///
+// note: ここで記述するのはインベントリのアイテム、呪文等のユーザーやNPCが使用可能なモノとその情報
+///
+
+Wildcat.usable = (function(){
+    let list = [];
+    /**
+     * @type {(any)=>number}
+     */
+    let create = function(){}
+    return {
+        create: create
+    }
+})();
+
+/*------------------------------------------
+
+インベントリ
+
+------------------------------------------*/
+
+Wildcat.inventory = (function(){
+
+    return {
+
     }
 })();
