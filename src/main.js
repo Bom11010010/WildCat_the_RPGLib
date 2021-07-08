@@ -12,6 +12,7 @@ wc_image.targetLayer = Wildcat.layer.create();
 let imageID = wc_image.create(src, 'image');
 
 sprite = Wildcat.component.create(
+    "sprite",
     (object, value)=>{
 
     },
@@ -27,6 +28,7 @@ sprite = Wildcat.component.create(
 );
 
 mover = Wildcat.component.create(
+    "move",
     (object, value)=>{
         let v = value;
 
@@ -37,6 +39,7 @@ mover = Wildcat.component.create(
     
             v.speed = Wildcat.file.readData("speed")
         }
+
         return v
     },
     (object, value)=>{
