@@ -1,3 +1,5 @@
+const { normalize } = require("path");
+
 let Wildcat = {}
 /*------------------------------------------
 
@@ -35,6 +37,32 @@ Wildcat.gameData = {
     }
 };
 
+/*------------------------------------------
+
+数値操作
+
+------------------------------------------*/
+Wildcat.number = (function(){
+    return{
+        /**
+         * 配列内のfalsyな値を全て0にした配列を返す。
+         * @param {any} a
+         */
+        falsyToZero: function(a){
+            let result = a;
+            if(!a){
+                result = 0;
+            }
+            return result;
+        },
+        Leap: function(a, b, r){
+            let result;
+            let offset = a;
+
+            return result;
+        }
+    }
+})()
 
 
 /*------------------------------------------
@@ -79,19 +107,16 @@ Wildcat.array = (function(){
             return result;
         },
         /**
-         * 配列内のfalsyな値を全て0にした配列を返す。
-         * @param {*[]} array 
+         * index番目を取り除いた配列を返す
+         * @param {*[]} array
+         * @param {number} index
          */
-        falsyToZeroAll: function(array){
-            let result = [];
-            
-            for(let i in array){
-                if(!array[i]){
-                    result[i] = 0;
-                }else{
-                    result[i] = array[i];
-                }
+        removeElement: function(array, index){
+            if(index === void 0){
+                return array
             }
+            let result = [];
+            result = array.slice(0, index).concat(array.slice(index + 1));
             return result;
         },
         /**
@@ -654,6 +679,15 @@ Wildcat.image = (function(){
     }
 })();
 
+Wildcat.animation = (function(){
+    let list = [];
+    return {
+        create: function(){
+
+        },
+        list: list
+    }
+})()
 
 /*------------------------------------------
 
@@ -674,7 +708,7 @@ Wildcat.gameObject = (function(){
             this.position = {dx: dx, dy: dy};
             this.size = {w: w, h: h}
             /**
-             * @type {Array<{Start: (object: any, value: any)=>any, Update: (object: any, value: any)=>any, isStarted: boolean}>}
+             * @type {Array<{Start: (object: any, value: any)=>any, Update: (object: any, value: any)=>any, isStarted: boolean, name: string}>}
              */
             this.components = [];
 
@@ -693,16 +727,17 @@ Wildcat.gameObject = (function(){
          */
         addComponent(compId, value = {}, id = Wildcat.array.getEmpty(this.components)){
             this.components[id] = Wildcat.component.list[compId];
-            this.value[id] = value;
+            this.value[this.components[id].name] = value;
             return id
         }
         /**
          * 
-         * @param {number} id 
+         * @param {number} compId 
          * @param {*[]} value 
          */
-        setValue(id, value){
-            this.value[id] = value;
+        setValue(compId, value){
+            compName = Wildcat.component.list[compId].name;
+            this.value[compName] = value;
         }
 
         work(){
@@ -713,9 +748,11 @@ Wildcat.gameObject = (function(){
             let component;
 
             for(let i in components){
-                let value = this.value[i];
-
+                
                 component = components[i];
+
+                let value = this.value[component.name];
+
 
                 if(!component.isStarted){
                     this.value[i] = component.Start(this, value);
@@ -759,7 +796,8 @@ Wildcat.component = (function(){
          * @param {(object: any, value: any)=>any} Start 
          * @param {(object: any, value: any)=>any} Update 
          */
-        constructor(Start, Update){
+        constructor(name, Start, Update){
+            this.name = name;
             this.Start = Start;
             this.Update = Update;
             
@@ -772,13 +810,14 @@ Wildcat.component = (function(){
     return {
         /**
          * 
+         * @param {string} name
          * @param {(object: any, value: any)=>any} Start 
          * @param {(object: any, value: any)=>any} Update 
          * @param {number} id 
          * @returns {number}
          */
-        create: function(Start, Update, id = Wildcat.array.getEmpty(list)){
-            list[id] = new Component(Start, Update);
+        create: function(name, Start, Update, id = Wildcat.array.getEmpty(list)){
+            list[id] = new Component(name, Start, Update);
             return id
         },
         list: list
@@ -869,9 +908,6 @@ Wildcat.file = (function(){
             fs.mkdirSync(appDir + `\\save`);
         }
 
-        /**
-         * TODO: fsの関数を同期するバージョンに付け替える
-         */
         save = function(){
             fs.writeFileSync(appDir + `\\save\\${dataStoreName}.dat`, dataStore, function(err){})
 
@@ -1036,10 +1072,6 @@ Wildcat.usable = (function(){
             this.comment = comment
             this.effect = effect
         }
-
-        work(){
-            this.effect()
-        }
     }
     return {
         /**
@@ -1068,8 +1100,93 @@ Wildcat.usable = (function(){
 ------------------------------------------*/
 
 Wildcat.inventory = (function(){
+    let list = [];
+    let Inventory = class {
+        constructor(tag){
+            this.tag = tag
+            /**
+             * 実体ではなくIDと個数を入れる
+             * @type {any[]}
+             */
+            this.usabeObjects = [] //{id, count}
+            this.selecting = 0
+        }
 
+        get selectingObjId(){return this.usabeObjects[this.selecting].id}
+
+        
+        /**
+         * インベントリ内を探し、インデックスを返す
+         * @param {number} usableId 
+         * @returns {number} index
+         */
+        find(usableId){
+            let result = -1
+
+            this.usabeObjects.forEach((v, index)=>{if(v.id === usableId){result = index}})
+
+            return result
+        }
+
+        add(usableId = this.selectingObjId, count = 1){
+            let index = this.find(usableId)
+            if(index == -1){
+                //インベントリにusableIdのIDを持つオブジェクトが無い場合
+                this.usabeObjects.push({id: usableId, count: count})
+            }else{
+                //ある場合
+                this.usabeObjects[index].count += count
+            }
+            this.normalize()
+        }
+
+        remove(usableId = this.selectingObjId, count = 1){
+            let index = this.find(usableId)
+
+            this.usabeObjects[index].count -= count
+            this.normalize()
+        }
+        /**
+         * インベントリを整理する
+         */
+        normalize(){
+
+            for(let i in this.usabeObjects){
+                //一つも存在しないオブジェクトをインベントリから取り除く
+                if(this.usabeObjects[i].count <= 0){
+                    this.usabeObjects = Wildcat.array.removeElement(this.usabeObjects, i)
+                }
+            }
+        }
+        swap(index_1, index_2){
+            let _temp;
+            _temp = this.usabeObjects[index_1];
+
+            this.usabeObjects[index_1] = this.usabeObjects[index_2];
+
+            this.usabeObjects[index_2] = _temp;
+        }
+        sendTo(invId, id = this.selectingObjId, count = 1){
+            let inv = Wildcat.inventory.list[invId];
+            if(inv.tag === this.tag){
+                if(this.find(id) == -1){
+                    return;
+                }else if(count < 0){
+                    return;
+                }else if(this.usabeObjects[this.find(id)].count <= count){
+                    this.remove(id, this.usabeObjects[this.find(id)].count);
+                    Wildcat.inventory.list[invId].add(id, this.usabeObjects[this.find(id)].count);
+                }else{
+                    this.remove(id, count);
+                    Wildcat.inventory.list[invId].add(id, count);
+                }
+            }
+        }
+    }
     return {
-
+        create: function(tag, id = Wildcat.array.getEmpty(list)){
+            list[id] = new Inventory(tag);
+        },
+        list: list
     }
 })();
