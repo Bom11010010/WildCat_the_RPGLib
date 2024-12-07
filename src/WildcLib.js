@@ -1,4 +1,6 @@
-const { normalize } = require("path");
+if(typeof nw != 'undefined'){
+    const { normalize } = require("path");
+}
 
 let Wildcat = {}
 /*------------------------------------------
@@ -77,7 +79,7 @@ Wildcat.array = (function(){
          * 配列の最初の空の要素の番号を取得
          * @param {*[]} array 
          */
-        getEmpty: function(array){
+        getFirstEmpty: function(array){
             let i = 0;
             while(array[i]){
                 i++;
@@ -561,7 +563,7 @@ Wildcat.sound = (function(){
          * @param {'se' | 'bgm'} type 
          * @param {number} id 
          */
-        create: function(src, type = 'se', id = Wildcat.array.getEmpty(list)){
+        create: function(src, type = 'se', id = Wildcat.array.getFirstEmpty(list)){
             list[id] = new Audio(src);
             if(type === 'bgm'){
                 list[id].onload = ()=>{list[id].loop = true}
@@ -603,7 +605,7 @@ Wildcat.image = (function(){
          * @param {number} actorSize
          * @param {number} id 
          */
-        create: function(src, type = 'image', actorSize = undefined, id = Wildcat.array.getEmpty(list)){
+        create: function(src, type = 'image', actorSize = undefined, id = Wildcat.array.getFirstEmpty(list)){
             let imageType = 0;
             let element = new Image();
             element.src = src;
@@ -725,7 +727,7 @@ Wildcat.gameObject = (function(){
          * @param {number} id 
          * @returns {number}
          */
-        addComponent(compId, value = {}, id = Wildcat.array.getEmpty(this.components)){
+        addComponent(compId, value = {}, id = Wildcat.array.getFirstEmpty(this.components)){
             this.components[id] = Wildcat.component.list[compId];
             this.value[this.components[id].name] = value;
             return id
@@ -770,7 +772,7 @@ Wildcat.gameObject = (function(){
     }
 
     return {
-        create: function(dx, dy, show = 1, w, h, id = Wildcat.array.getEmpty(list)){
+        create: function(dx, dy, show = 1, w, h, id = Wildcat.array.getFirstEmpty(list)){
             
             list[id] = new GameObject(dx, dy, show = 1, w, h, id);
 
@@ -816,7 +818,7 @@ Wildcat.component = (function(){
          * @param {number} id 
          * @returns {number}
          */
-        create: function(name, Start, Update, id = Wildcat.array.getEmpty(list)){
+        create: function(name, Start, Update, id = Wildcat.array.getFirstEmpty(list)){
             list[id] = new Component(name, Start, Update);
             return id
         },
@@ -1085,7 +1087,7 @@ Wildcat.usable = (function(){
          * @param {number} id tagごとの使用可能オブジェクトID。tagが違うならIDが同じでも構わない
          * @returns {number} 
          */
-        create: function(tag, effect, cost, name, comment, isPassive = false, id = Wildcat.array.getEmpty(lists[tag])){
+        create: function(tag, effect, cost, name, comment, isPassive = false, id = Wildcat.array.getFirstEmpty(lists[tag])){
             lists[tag][id] = new Usable(effect, cost, name, comment, isPassive)
             return id
         },
@@ -1184,7 +1186,7 @@ Wildcat.inventory = (function(){
         }
     }
     return {
-        create: function(tag, id = Wildcat.array.getEmpty(list)){
+        create: function(tag, id = Wildcat.array.getFirstEmpty(list)){
             list[id] = new Inventory(tag);
         },
         list: list
