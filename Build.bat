@@ -1,5 +1,5 @@
-PowerShell Compress-Archive -Path "C:\Users\BonPC\WildCat_the_RPGFrameWork\src\*" -DestinationPath "C:\nwjs-v0.47.1-win-x64\Noova.zip" -Force
+PowerShell Compress-Archive -Path ".\src\*" -DestinationPath "C:\nwjs-sdk\Noova.zip" -Force
 
-copy /b C:\nwjs-v0.47.1-win-x64\nw.exe + C:\nwjs-v0.47.1-win-x64\Noova.zip C:\nwjs-v0.47.1-win-x64\Noova.exe
+copy /b C:\nwjs-sdk\nw.exe + C:\nwjs-sdk\Noova.zip C:\nwjs-sdk\Noova.exe
 
-C:\nwjs-v0.47.1-win-x64\Noova.exe
+C:\nwjs-sdk\Noova.exe

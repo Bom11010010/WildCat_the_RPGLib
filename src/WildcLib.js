@@ -2,69 +2,21 @@ if(typeof nw != 'undefined'){
     const { normalize } = require("path");
 }
 
-let Wildcat = {}
+export let Wildcat = {}
 /*------------------------------------------
 
 ゲームデータ
 
 ------------------------------------------*/
-Wildcat.gameData = {
-    chipSize: 32,
-    screenSize: {x: 640, y: 480},
-    nowFrame: 0,
-    set fps(a){fps = a},
-    get fps(){return fps},
-    startGame: function(main){
-        /**
-         * @type function
-         */
-        let fps = 30;
-        let nowFrame = 0;
-
-        (function mainloop(){
-
-            nowFrame = nowFrame + 1;
-
-            for(let i in Wildcat.layer.list){
-                let targetLayer = Wildcat.layer.list[i];
-
-                targetLayer.clearRect(0, 0, targetLayer.canvas.width, targetLayer.canvas.height);
-            }
-            main();
-
-            Wildcat.gameData.nowFrame = nowFrame;
-
-            setTimeout(mainloop, 1000 / fps)
-        })();
-    }
-};
-
+import { gameData } from "./WildcLib/GameData.js";
+Wildcat.gameData = gameData;
 /*------------------------------------------
 
 数値操作
 
 ------------------------------------------*/
-Wildcat.number = (function(){
-    return{
-        /**
-         * 配列内のfalsyな値を全て0にした配列を返す。
-         * @param {any} a
-         */
-        falsyToZero: function(a){
-            let result = a;
-            if(!a){
-                result = 0;
-            }
-            return result;
-        },
-        Leap: function(a, b, r){
-            let result;
-            let offset = a;
-
-            return result;
-        }
-    }
-})()
+import { number } from "./WildcLib/Number.js";
+Wildcat.number = number;
 
 
 /*------------------------------------------
@@ -72,356 +24,32 @@ Wildcat.number = (function(){
 配列操作
 
 ------------------------------------------*/
-
-Wildcat.array = (function(){
-    return {
-        /**
-         * 配列の最初の空の要素の番号を取得
-         * @param {*[]} array 
-         */
-        getFirstEmpty: function(array){
-            let i = 0;
-            while(array[i]){
-                i++;
-            }
-            return i
-        },
-        /**
-         * 配列の配列（二次配列）の中の全ての要素を結合して配列を返す
-         * @param {*[][]} array 
-         */
-        joinAll: function(array){
-            return array.join().split(",");
-        },
-        /**
-         * 配列の配列（二次配列）の中で一番長い要素の長さを返す
-         * @param {*[][]} array 
-         */
-        getMostLonger: function(array){
-            let result = 0;
-
-            for(let i in array){
-                if(array[i].length > result){
-                    result = array[i].length
-                }
-            }
-
-            return result;
-        },
-        /**
-         * index番目を取り除いた配列を返す
-         * @param {*[]} array
-         * @param {number} index
-         */
-        removeElement: function(array, index){
-            if(index === void 0){
-                return array
-            }
-            let result = [];
-            result = array.slice(0, index).concat(array.slice(index + 1));
-            return result;
-        },
-        /**
-         * 配列からランダムに要素を選ぶ
-         * @param {*[]} array 
-         */
-        choose: function(array){return array[Math.floor(Math.random()*array.length)]}
-    }
-})()
+import { array } from "./WildcLib/Array.js";
+Wildcat.array = array;
 
 /*------------------------------------------
 
 オブジェクト操作
 
 ------------------------------------------*/
-
-Wildcat.object = (function(){
-    return {
-        /**
-         * 
-         * @param {any} obj 
-         * @returns 
-         */
-        encodeToString: function encode(obj){
-            let result = ""
-            for(let i in obj){
-                if(result !== ""){
-                    result += ";"
-                }
-                if(typeof obj[i] == 'object'){
-                    result += `${i}=${encodeURIComponent(encode(obj[i]))}|object`
-                }else{
-                    //非対応の型を弾く
-                    if(typeof obj[i] !== 'bigint' && typeof obj[i] !== 'function' && typeof obj[i] !== 'symbol'){
-                        result += `${i}=${encodeURIComponent(obj[i])}|${typeof obj[i]}`
-                    }
-                }
-            }
-            return result
-        },
-        /**
-         * 
-         * @param {string} str 
-         */
-        decodeFromString: function decode(str){
-            let result = {}
-            
-            let keyAndDataList = str.split(";")
-
-            for(let i in keyAndDataList){
-                let key
-                /**
-                 * @type {string}
-                 */
-                let dataAndType
-
-
-                [key, dataAndTypeStr] = keyAndDataList[i].split("=");
-                dataAndType = dataAndTypeStr.split("|");
-
-                data = decodeURIComponent(dataAndType[0])
-                if(dataAndType[1] == 'undefined'){
-                    result[key] = undefined;
-                }else if(dataAndType[1] == 'string'){
-                    result[key] = data
-                }else if(dataAndType[1] == 'number'){
-                    result[key] = +data
-                }else if(dataAndType[1] == 'boolean'){
-                    if(data === 'false'){
-                        result[key] = false;
-                    }else{
-                        result[key] = true;
-                    }
-                }else if(dataAndType[1] == 'object'){
-                    result[key] = decode(data);
-                }
-            }
-
-            return result
-        }
-    }
-})()
+import { object } from "./WildcLib/Object.js";
+Wildcat.object = object
 
 /*------------------------------------------
 
 DOM操作
 
 ------------------------------------------*/
-Wildcat.html = (function(){
-    let body = document.getElementsByTagName('body')[0];
-    body.innerHTML +=
-`
-<div id="outer">
-    <div id="layers"></div>
-    <div id="contents"></div>
-</div>
-`
-    let head = document.getElementsByTagName('head')[0];
-    head.innerHTML +=
-    
-`
-<style id="fontSetter">
-</style>
-
-<style>
-    body {
-        overflow: hidden;
-        font-family: "GameFont";
-    }
-    #contents > *{
-        word-wrap: break-word;
-        display: inline;
-        position: absolute;
-    }
-    #layers > *{
-        position: absolute;
-    }
-    #layers{
-        overflow: hidden;
-    }
-    #outer{
-        transform: scale(1,1);
-        transform-origin:0 0;
-        margin: auto auto;
-    }
-</style>
-`
-    let outer = document.getElementById("outer");
-    let layers = document.getElementById("layers");
-    let contents = document.getElementById("contents");
-
-    return {
-        /**
-         * @type HTMLBodyElement
-         */
-        body: body,
-        /**
-         * @type HTMLBodyElement
-         */
-        head: head,
-        /**
-         * @type HTMLDivElement
-         */
-        outer: outer,
-        /**
-         * @type HTMLDivElement
-         */
-        layers: layers,
-        /**
-         * @type HTMLDivElement
-         */
-        contents: contents,
-
-        /**
-         * HTMLを書き足す
-         * @param {HTMLElement} target 
-         * @param {string} html 
-         */
-        addHTML: function(target, html){
-            target.innerHTML += html;
-        },
-        checkExistsByID: function(id){
-            return document.getElementById(id) ? true : false;
-        },
-        getEmptyNumberedID: function(id){
-            //連番IDのなかで存在しない数（最小）を調べる
-            let i = 0;
-            while(this.checkExistsByID(`${id}${i}`)){
-                i++;
-            }
-            return i
-        },
-        setFontFile: function(fontFileSrc){
-            let fontSetter = document.getElementById("fontSetter");
-            let extension = fontFileSrc.slice(-4);
-
-            let format;
-
-            if(extension === ".otf"){
-                format = "opentype"
-            }else if(extension === ".ttf"){
-                format = "truetype"
-            }
-
-            if(fontFileSrc){
-                fontSetter.innerHTML = 
-`
-@font-face {
-    font-family: "GameFont";
-    src: url(${fontFileSrc}) format("${format}");
-}
-`
-            }else{
-                fontSetter.innerHTML = ""
-            }
-        }
-    }
-})();
+import { dom } from "./WildcLib/Dom.js";
+Wildcat.dom = dom;
 
 /*------------------------------------------
 
 レイヤー
 
 ------------------------------------------*/
-Wildcat.layer = (function(){
-
-    /**
-     * @type CanvasRenderingContext2D[]
-     */
-    let list = [];
-
-    let layerEdited = false;
-
-    let getCtx = function(id){
-        if(layerEdited){ 
-            list[id] = document.getElementById(`layer${id}`).getContext("2d");
-        }
-        return list[id];
-    }
-
-    return {
-        /**
-         * レイヤーを作成
-         * @param {number} id 
-         * @param {number} width 
-         * @param {number} height 
-         */
-        create: function(id = Wildcat.html.getEmptyNumberedID("layer"), width = Wildcat.gameData.screenSize.x, height = Wildcat.gameData.screenSize.y){
-            //idを強制的にnumberにする
-            id = new Number(id);
-            if(Wildcat.html.checkExistsByID(`layer${id}`)){
-                if(isNaN(id) || id === undefined){
-                    throw new Error(`そのLayerIDは使用出来ません`);
-                }
-                throw new Error(`${id}は使用中です`);
-            }
-            let layers = Wildcat.html.layers;
-            Wildcat.html.addHTML(layers, `<canvas id="layer${id}" width="${width}" height="${height}" z-index="${id}"></canvas>`);
-            list[id] = document.getElementById(`layer${id}`).getContext("2d");
-            layerEdited = true;
-
-            return id;
-        },
-        /**
-         * レイヤーを削除
-         * @param {number} id 
-         */
-        remove: function(id){
-            document.getElementById(`layer${id}`).remove();
-            if(list[id]){
-                list.splice(id, 1);
-            }
-        },
-        /**
-         * 全てのレイヤーを削除
-         */
-        removeAll: function(){
-            for(let i in this.list){
-                this.remove(i);
-            }
-        },
-        /**
-         * 位置を設定
-         * @param {number} id 
-         * @param {number} dx 
-         * @param {number} dy 
-         */
-        setPosition: function(id, dx = list[id].style.left, dy = list[id].style.top){
-            list[id].canvas.style.left = `${dx}px`;
-            list[id].canvas.style.top = `${dy}px`;
-        },
-        /**
-         * サイズを設定
-         * @param {number} id 
-         * @param {number} dw 
-         * @param {number} dh 
-         */
-        setSize: function(id, dw = list[id].canvas.width, dh = list[id].canvas.height){
-            list[id].canvas.width = `${dw}`;
-            list[id].canvas.height = `${dh}`;
-        },
-        get list(){
-            /**
-             * @type CanvasRenderingContext2D[]
-             */
-            let result = []
-            for(let i in list){
-                result[i] = getCtx(i);
-            }
-            return result;
-        },
-        get canvasesList(){
-            let result = []
-            for(let i in list){
-                result[i] = list[i].canvas;
-            }
-            return result;
-        }
-    }
-})();
-
-
-
+import { layer } from "./WildcLib/Layer.js";
+Wildcat.layer = layer;
 
 
 /*------------------------------------------------

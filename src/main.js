@@ -1,3 +1,4 @@
+import { Wildcat } from "./WildcLib.js";
 
 let wc_image = Wildcat.image;
 let wc_layer = Wildcat.layer;
@@ -11,7 +12,7 @@ wc_image.targetLayer = Wildcat.layer.create();
 
 let imageID = wc_image.create(src, 'image');
 
-sprite = Wildcat.component.create(
+let sprite = Wildcat.component.create(
     "sprite",
     (object, value)=>{
 
@@ -27,7 +28,7 @@ sprite = Wildcat.component.create(
     }
 );
 
-mover = Wildcat.component.create(
+let mover = Wildcat.component.create(
     "move",
     (object, value)=>{
         let v = value;
@@ -62,9 +63,9 @@ mover = Wildcat.component.create(
     }
 )
 
-test = Wildcat.gameObject.create(1, 0, 0)
+let test = Wildcat.gameObject.create(1, 0, 0)
 
-spriteObj = Wildcat.gameObject.list[test]
+let spriteObj = Wildcat.gameObject.list[test]
 
 spriteObj.addComponent(sprite, {imageID: imageID});
 spriteObj.addComponent(mover, {speed:{x:5, y:5}, size:{w:50, h:50}});
