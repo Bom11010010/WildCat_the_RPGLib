@@ -18,10 +18,10 @@ export let io = (function(){
     let mousePlessing = [];
 
     window.onmousedown = (e)=>{
-        Wildcat.io.mouseCode[e.button] = true;
+        io.mouseCode[e.button] = true;
     }
     window.onmouseup = (e)=>{
-        Wildcat.io.mouseCode[e.button] = false;
+        io.mouseCode[e.button] = false;
     }
 
     return {
